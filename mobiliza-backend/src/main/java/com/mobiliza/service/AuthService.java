@@ -20,10 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.time.LocalDateTime;
+import java.util.Random;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+    private final EmailService emailService;
     private final UsuarioRepository usuarioRepository;
     private final CartaoRepository cartaoRepository;
     private final SaldoRepository saldoRepository;
@@ -77,6 +80,61 @@ public class AuthService {
         return response;
     }
 
+
+    public Map<String, String> esqueciSenha(String email) {
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        String codigo = gerarCodigo();
+
+        usuario.setCodigoRecuperacao(codigo);
+        usuario.setExpiracaoCodigo(LocalDateTime.now().plusMinutes(15));
+
+        usuarioRepository.save(usuario);
+
+        emailService.enviarCodigo(email, codigo);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("mensagem", "Código enviado para o e-mail.");
+
+        return response;
+    }
+
+    public Map<String, String> redefinirSenha(
+            String email,
+            String codigo,
+            String novaSenha
+    ) {
+
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (usuario.getCodigoRecuperacao() == null ||
+                !usuario.getCodigoRecuperacao().equals(codigo)) {
+
+            throw new RuntimeException("Código inválido");
+        }
+
+        if (usuario.getExpiracaoCodigo().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Código expirado");
+        }
+
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        usuario.setCodigoRecuperacao(null);
+        usuario.setExpiracaoCodigo(null);
+
+        usuarioRepository.save(usuario);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("mensagem", "Senha redefinida com sucesso!");
+
+        return response;
+    }
+
+    private String gerarCodigo() {
+        return String.format("%06d", new Random().nextInt(999999));
+    }
     private String gerarNumeroCartao() {
         long numero = (long) (Math.random() * 9000000000000000L) + 1000000000000000L;
         return String.valueOf(numero);

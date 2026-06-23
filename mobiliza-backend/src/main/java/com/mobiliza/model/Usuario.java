@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
-
+import java.time.LocalDateTime;
 @Entity
 @Table(name = "usuarios")
 @Data
@@ -29,7 +29,9 @@ public class Usuario implements UserDetails {
 
     @Column(nullable = false)
     private String senha;
+    private String codigoRecuperacao;
 
+    private LocalDateTime expiracaoCodigo;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
