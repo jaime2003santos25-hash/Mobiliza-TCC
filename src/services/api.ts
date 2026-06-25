@@ -4,10 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 /**
  * CONFIGURAÇÃO DE ACESSO UNIVERSAL:
  * Para que o APK funcione em qualquer rede, o backend deve estar em um IP fixo ou visível.
- * O IP abaixo (192.168.15.20) é o IP atual do seu computador na sua rede Wi-Fi.
+ * O IP abaixo (192.168.15.33) é o IP atual do seu computador na sua rede Wi-Fi.
  * Certifique-se de que o computador e o celular estejam na MESMA REDE.
  */
-const BASE_URL = 'http://192.168.15.20:8080/api';
+const BASE_URL = 'http://192.168.15.33:8080/api';
 
 const api = axios.create({
   baseURL: BASE_URL,

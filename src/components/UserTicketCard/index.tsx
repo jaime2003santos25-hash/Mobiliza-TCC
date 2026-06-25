@@ -1,10 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Animated,
-  TouchableOpacity,
   Image,
   Dimensions,
   PanResponder,
@@ -17,133 +16,123 @@ interface UserTicketCardProps {
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width - 48;
-const CARD_HEIGHT = 200;
+const CARD_HEIGHT = 220;
 
 const UserTicketCard: React.FC<UserTicketCardProps> = ({ userName, cardNumber }) => {
-  const [flipped, setFlipped] = useState(false);
-  const flipAnimation = useRef(new Animated.Value(0)).current;
-
-  // Para o efeito de "arrastar" (tilt)
+  // Valores para rotação contínua (360 graus)
   const rotateX = useRef(new Animated.Value(0)).current;
   const rotateY = useRef(new Animated.Value(0)).current;
 
   const panResponder = useRef(
     PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderMove: (evt, gestureState) => {
-        // Rotaciona levemente baseado no movimento (tilt effect)
-        rotateX.setValue(gestureState.dy / 10);
-        rotateY.setValue(gestureState.dx / 10);
+        // dx e dy controlam a rotação.
+        // Dividimos por um fator para a rotação ser suave.
+        rotateY.setValue(gestureState.dx);
+        rotateX.setValue(-gestureState.dy);
       },
       onPanResponderRelease: (evt, gestureState) => {
-        // Se foi apenas um toque rápido (sem muito movimento), vira o cartão
-        if (Math.abs(gestureState.dx) < 5 && Math.abs(gestureState.dy) < 5) {
-          flipCard();
-        }
-
-        // Volta o tilt ao normal
-        Animated.spring(rotateX, { toValue: 0, useNativeDriver: true }).start();
-        Animated.spring(rotateY, { toValue: 0, useNativeDriver: true }).start();
+        // Volta suavemente para a posição inicial ao soltar
+        Animated.parallel([
+          Animated.spring(rotateY, {
+            toValue: 0,
+            friction: 6,
+            tension: 40,
+            useNativeDriver: true
+          }),
+          Animated.spring(rotateX, {
+            toValue: 0,
+            friction: 6,
+            tension: 40,
+            useNativeDriver: true
+          }),
+        ]).start();
       },
     })
   ).current;
 
-  const flipCard = () => {
-    if (flipped) {
-      Animated.spring(flipAnimation, {
-        toValue: 0,
-        friction: 8,
-        tension: 10,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.spring(flipAnimation, {
-        toValue: 180,
-        friction: 8,
-        tension: 10,
-        useNativeDriver: true,
-      }).start();
-    }
-    setFlipped(!flipped);
-  };
-
-  const frontInterpolate = flipAnimation.interpolate({
-    inputRange: [0, 180],
-    outputRange: ['0deg', '180deg'],
+  // Interpolação para transformar o movimento em rotação total
+  const rotateYInterpolate = rotateY.interpolate({
+    inputRange: [-CARD_WIDTH, CARD_WIDTH],
+    outputRange: ['-180deg', '180deg'],
   });
 
-  const backInterpolate = flipAnimation.interpolate({
-    inputRange: [0, 180],
-    outputRange: ['180deg', '360deg'],
+  const rotateXInterpolate = rotateX.interpolate({
+    inputRange: [-CARD_HEIGHT, CARD_HEIGHT],
+    outputRange: ['-180deg', '180deg'],
   });
 
-  const frontOpacity = flipAnimation.interpolate({
-    inputRange: [89, 90],
-    outputRange: [1, 0],
+  // Mostra a frente ou o verso dependendo da rotação
+  const frontOpacity = rotateY.interpolate({
+    inputRange: [-CARD_WIDTH / 2, 0, CARD_WIDTH / 2],
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
   });
 
-  const backOpacity = flipAnimation.interpolate({
-    inputRange: [89, 90],
-    outputRange: [0, 1],
+  const backOpacity = rotateY.interpolate({
+    inputRange: [-CARD_WIDTH, -CARD_WIDTH / 2, 0, CARD_WIDTH / 2, CARD_WIDTH],
+    outputRange: [1, 1, 0, 1, 1],
   });
 
-  // Estilo de rotação combinada (Flip + Tilt)
-  const frontAnimatedStyle = {
+  const animatedStyle = {
     transform: [
       { perspective: 1000 },
-      { rotateY: frontInterpolate },
-      { rotateX: rotateX.interpolate({ inputRange: [-10, 10], outputRange: ['-15deg', '15deg'] }) },
-      { rotateY: rotateY.interpolate({ inputRange: [-10, 10], outputRange: ['-15deg', '15deg'] }) },
+      { rotateY: rotateYInterpolate },
+      { rotateX: rotateXInterpolate },
     ],
-    opacity: frontOpacity,
-  };
-
-  const backAnimatedStyle = {
-    transform: [
-      { perspective: 1000 },
-      { rotateY: backInterpolate },
-      { rotateX: rotateX.interpolate({ inputRange: [-10, 10], outputRange: ['-15deg', '15deg'] }) },
-      { rotateY: rotateY.interpolate({ inputRange: [-10, 10], outputRange: ['-15deg', '15deg'] }) },
-    ],
-    opacity: backOpacity,
   };
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
-      {/* Frente do Cartão */}
-      <Animated.View style={[styles.card, styles.frontCard, frontAnimatedStyle]}>
-        <Image
-          source={require('../../assets/images/logo_mobiliza.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <View style={styles.chipContainer}>
-          <View style={styles.chip} />
-        </View>
-        <Text style={styles.cardType}>BILHETE ÚNICO</Text>
-      </Animated.View>
+      <Animated.View style={[styles.cardContainer, animatedStyle]}>
 
-      {/* Verso do Cartão */}
-      <Animated.View style={[styles.card, styles.backCard, backAnimatedStyle]}>
-        <View style={styles.blackStrip} />
-        <View style={styles.infoContainer}>
-          <Text style={styles.label}>NOME DO USUÁRIO</Text>
-          <Text style={styles.value}>{userName.toUpperCase()}</Text>
+        {/* Lado Frontal */}
+        <Animated.View style={[styles.card, styles.frontCard, { opacity: frontOpacity }]}>
+          <Image
+            source={require('../../assets/images/logo_mobiliza.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <View style={styles.chipContainer}>
+            <View style={styles.chip} />
+          </View>
+          <Text style={styles.cardType}>BILHETE ÚNICO</Text>
+        </Animated.View>
 
-          <View style={styles.row}>
-            <View>
-              <Text style={styles.label}>NÚMERO DO CARTÃO</Text>
-              <Text style={styles.value}>{cardNumber}</Text>
-            </View>
-            <View style={styles.qrPlaceholder}>
-              <View style={styles.barcodeLine} />
-              <View style={[styles.barcodeLine, { width: '80%' }]} />
-              <View style={[styles.barcodeLine, { width: '90%' }]} />
-              <View style={[styles.barcodeLine, { width: '70%' }]} />
+        {/* Lado Verso */}
+        <Animated.View
+          style={[
+            styles.card,
+            styles.backCard,
+            {
+              position: 'absolute',
+              opacity: backOpacity,
+              transform: [{ rotateY: '180deg' }] // O verso deve estar invertido inicialmente
+            }
+          ]}
+        >
+          <View style={styles.blackStrip} />
+          <View style={styles.infoContainer}>
+            <Text style={styles.label}>NOME DO USUÁRIO</Text>
+            <Text style={styles.value}>{userName.toUpperCase() || 'JAYME'}</Text>
+
+            <View style={styles.row}>
+              <View>
+                <Text style={styles.label}>NÚMERO DO CARTÃO</Text>
+                <Text style={styles.value}>{cardNumber || '4888 7291 7112 2366'}</Text>
+              </View>
+              <View style={styles.qrPlaceholder}>
+                <View style={styles.barcodeLine} />
+                <View style={[styles.barcodeLine, { width: '80%' }]} />
+                <View style={[styles.barcodeLine, { width: '90%' }]} />
+              </View>
             </View>
           </View>
-        </View>
-        <Text style={styles.footerText}>MOBILIZA - TRANSPORTE PÚBLICO</Text>
+          <Text style={styles.footerText}>MOBILIZA - TRANSPORTE PÚBLICO</Text>
+        </Animated.View>
+
       </Animated.View>
     </View>
   );
@@ -153,53 +142,56 @@ const styles = StyleSheet.create({
   container: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
-    marginHorizontal: 24,
-    marginTop: 20,
     alignSelf: 'center',
+    marginVertical: 20,
+  },
+  cardContainer: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     width: '100%',
     height: '100%',
-    borderRadius: 20, // Mais arredondado para ficar moderno
+    borderRadius: 24,
     backfaceVisibility: 'hidden',
-    position: 'absolute',
-    elevation: 12,
+    backgroundColor: '#1A2227',
+    borderWidth: 1.5,
+    borderColor: '#2D373D',
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.5,
-    shadowRadius: 15,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
   frontCard: {
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    borderWidth: 1.5,
-    borderColor: '#1d4a42',
   },
   backCard: {
     backgroundColor: '#0D1B1E',
-    borderWidth: 1.5,
-    borderColor: '#1d4a42',
-    paddingTop: 20,
+    paddingTop: 10,
   },
   logo: {
-    width: '90%',
-    height: '70%',
+    width: '80%',
+    height: '60%',
   },
   chipContainer: {
     position: 'absolute',
-    top: 40,
-    left: 20,
+    top: 35,
+    left: 25,
   },
   chip: {
     width: 45,
     height: 35,
     backgroundColor: '#3DAE91',
     borderRadius: 8,
-    opacity: 0.6,
+    opacity: 0.8,
     borderWidth: 1,
-    borderColor: '#F2F4F7',
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   cardType: {
     position: 'absolute',
@@ -214,14 +206,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 45,
     backgroundColor: '#000',
-    marginTop: 10,
+    marginTop: 20,
   },
   infoContainer: {
-    padding: 20,
+    padding: 24,
   },
   label: {
     color: '#5DCAA5',
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: 1.5,
     marginBottom: 4,
   },
@@ -230,7 +222,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
-    letterSpacing: 1,
   },
   row: {
     flexDirection: 'row',
@@ -238,17 +229,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   qrPlaceholder: {
-    width: 70,
-    height: 50,
+    width: 60,
+    height: 40,
     backgroundColor: '#fff',
-    padding: 8,
-    borderRadius: 6,
-    justifyContent: 'center',
+    padding: 6,
+    borderRadius: 4,
   },
   barcodeLine: {
-    height: 4,
+    height: 3,
     backgroundColor: '#000',
-    marginBottom: 3,
+    marginBottom: 2,
     width: '100%',
   },
   footerText: {
@@ -257,9 +247,9 @@ const styles = StyleSheet.create({
     width: '100%',
     textAlign: 'center',
     color: '#3DAE91',
-    fontSize: 9,
-    opacity: 0.7,
-    fontWeight: '600',
+    fontSize: 8,
+    opacity: 0.8,
+    fontWeight: 'bold',
   },
 });
 

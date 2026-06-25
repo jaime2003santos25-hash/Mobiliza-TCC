@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import authService from '../../services/authService';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import { Theme } from '../../styles/theme';
 
 const SignUpScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -36,7 +38,7 @@ const SignUpScreen: React.FC = () => {
     try {
       setLoading(true);
       await authService.signUp({ nome, email, senha });
-      Alert.alert('Sucesso', 'Conta criada com sucesso! Faça login para continuar.', [
+      Alert.alert('Sucesso', 'Conta criada com sucesso!', [
         { text: 'OK', onPress: () => navigation.navigate('Login') }
       ]);
     } catch (error: any) {
@@ -48,144 +50,151 @@ const SignUpScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Criar Conta</Text>
-          <Text style={styles.subtitle}>Junte-se ao Mobiliza e facilite suas viagens.</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nome Completo</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu nome"
-              placeholderTextColor="#5e8278"
-              value={nome}
-              onChangeText={setNome}
-              autoCapitalize="words"
-            />
+    <ScreenWrapper>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Criar Conta</Text>
+            <Text style={styles.subtitle}>Junte-se ao Mobiliza e facilite suas viagens.</Text>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>E-mail</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="exemplo@email.com"
-              placeholderTextColor="#5e8278"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Nome Completo</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite seu nome"
+                placeholderTextColor={Theme.dark.textQuaternary}
+                value={nome}
+                onChangeText={setNome}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>E-mail</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="exemplo@email.com"
+                placeholderTextColor={Theme.dark.textQuaternary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Senha</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Mínimo 6 caracteres"
+                placeholderTextColor={Theme.dark.textQuaternary}
+                secureTextEntry
+                value={senha}
+                onChangeText={setSenha}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Confirmar Senha</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Repita sua senha"
+                placeholderTextColor={Theme.dark.textQuaternary}
+                secureTextEntry
+                value={confirmarSenha}
+                onChangeText={setConfirmarSenha}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.signUpButton}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={Theme.dark.bgPrimary} />
+              ) : (
+                <Text style={styles.signUpButtonText}>CRIAR CONTA</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.backButtonText}>Já tenho uma conta. <Text style={{color: Theme.dark.brand, fontWeight: 'bold'}}>Entrar</Text></Text>
+            </TouchableOpacity>
           </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Senha</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Mínimo 6 caracteres"
-              placeholderTextColor="#5e8278"
-              secureTextEntry
-              value={senha}
-              onChangeText={setSenha}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirmar Senha</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Repita sua senha"
-              placeholderTextColor="#5e8278"
-              secureTextEntry
-              value={confirmarSenha}
-              onChangeText={setConfirmarSenha}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={styles.signUpButton}
-            onPress={handleSignUp}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#0D1B1E" />
-            ) : (
-              <Text style={styles.signUpButtonText}>CRIAR CONTA</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>Já tenho uma conta. <Text style={{color: '#0DB39E', fontWeight: 'bold'}}>Entrar</Text></Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D1B1E',
   },
   scrollContent: {
     flexGrow: 1,
     padding: 24,
+    paddingBottom: 40,
     justifyContent: 'center',
   },
   header: {
-    marginBottom: 40,
+    marginBottom: 32,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#F2F4F7',
+    color: Theme.dark.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#5DCAA5',
+    color: Theme.dark.brand,
+    opacity: 0.8,
   },
   form: {
     width: '100%',
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
-    color: '#5DCAA5',
-    fontSize: 14,
-    fontWeight: '600',
+    color: Theme.dark.brand,
+    fontSize: 12,
+    fontWeight: '700',
     marginBottom: 8,
+    textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: '#0c2b27',
+    backgroundColor: Theme.dark.bgCard,
     borderWidth: 1,
-    borderColor: '#1d4a42',
-    borderRadius: 12,
+    borderColor: Theme.dark.borderPrimary,
+    borderRadius: 16,
     padding: 16,
-    color: '#F2F4F7',
+    color: Theme.dark.textPrimary,
     fontSize: 16,
   },
   signUpButton: {
-    backgroundColor: '#0DB39E',
-    borderRadius: 12,
+    backgroundColor: Theme.dark.brand,
+    borderRadius: 16,
     padding: 18,
     alignItems: 'center',
     marginTop: 20,
+    shadowColor: Theme.dark.brand,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     elevation: 4,
   },
   signUpButtonText: {
-    color: '#0D1B1E',
+    color: Theme.dark.bgPrimary,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -194,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButtonText: {
-    color: '#7fa89e',
+    color: Theme.dark.textQuaternary,
     fontSize: 14,
   },
 });

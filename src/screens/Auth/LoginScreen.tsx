@@ -14,6 +14,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../../services/authService';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import { Theme } from '../../styles/theme';
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -42,117 +44,126 @@ const LoginScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <View style={styles.content}>
-        <Image
-          source={require('../../assets/images/logo_mobiliza.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-
-        <View style={styles.form}>
-          <Text style={styles.welcomeText}>Bem-vindo de volta!</Text>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>E-mail</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu e-mail"
-              placeholderTextColor="#5e8278"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
+    <ScreenWrapper>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <View style={styles.content}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/images/logo_mobiliza.png')}
+              style={styles.logo}
+              resizeMode="contain"
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Senha</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite sua senha"
-              placeholderTextColor="#5e8278"
-              secureTextEntry
-              value={senha}
-              onChangeText={setSenha}
-            />
-          </View>
+          <View style={styles.form}>
+            <Text style={styles.welcomeText}>Bem-vindo de volta!</Text>
 
-          <TouchableOpacity
-            style={styles.forgotPassword}
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
-          </TouchableOpacity>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>E-mail</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite seu e-mail"
+                placeholderTextColor={Theme.dark.textQuaternary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
 
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#0D1B1E" />
-            ) : (
-              <Text style={styles.loginButtonText}>ENTRAR</Text>
-            )}
-          </TouchableOpacity>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Senha</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite sua senha"
+                placeholderTextColor={Theme.dark.textQuaternary}
+                secureTextEntry
+                value={senha}
+                onChangeText={setSenha}
+              />
+            </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Não tem uma conta?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-              <Text style={styles.signUpText}> Cadastre-se</Text>
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => navigation.navigate('ForgotPassword')}
+            >
+              <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={Theme.dark.bgPrimary} />
+              ) : (
+                <Text style={styles.loginButtonText}>ENTRAR</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Não tem uma conta?</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+                <Text style={styles.signUpText}> Cadastre-se</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D1B1E',
   },
   content: {
     flex: 1,
     padding: 24,
     justifyContent: 'center',
   },
-  logo: {
-    width: '100%',
-    height: 120,
+  logoContainer: {
+    alignItems: 'center',
     marginBottom: 40,
+  },
+  logo: {
+    width: 250,
+    height: 120,
   },
   form: {
     width: '100%',
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#F2F4F7',
+    color: Theme.dark.textPrimary,
     marginBottom: 32,
     textAlign: 'center',
+    fontFamily: Platform.OS === 'ios' ? 'Space Grotesk' : 'sans-serif',
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
-    color: '#5DCAA5',
-    fontSize: 14,
-    fontWeight: '600',
+    color: Theme.dark.brand,
+    fontSize: 12,
+    fontWeight: '700',
     marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   input: {
-    backgroundColor: '#0c2b27',
+    backgroundColor: Theme.dark.bgCard,
     borderWidth: 1,
-    borderColor: '#1d4a42',
-    borderRadius: 12,
+    borderColor: Theme.dark.borderPrimary,
+    borderRadius: 16,
     padding: 16,
-    color: '#F2F4F7',
+    color: Theme.dark.textPrimary,
     fontSize: 16,
   },
   forgotPassword: {
@@ -160,24 +171,26 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   forgotPasswordText: {
-    color: '#0DB39E',
-    fontSize: 14,
+    color: Theme.dark.textQuaternary,
+    fontSize: 13,
+    fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: '#0DB39E',
-    borderRadius: 12,
+    backgroundColor: Theme.dark.brand,
+    borderRadius: 16,
     padding: 18,
     alignItems: 'center',
-    shadowColor: '#0DB39E',
+    shadowColor: Theme.dark.brand,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 10,
+    elevation: 5,
   },
   loginButtonText: {
-    color: '#0D1B1E',
+    color: Theme.dark.bgPrimary,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   footer: {
     flexDirection: 'row',
@@ -185,11 +198,11 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   footerText: {
-    color: '#5e8278',
+    color: Theme.dark.textQuaternary,
     fontSize: 14,
   },
   signUpText: {
-    color: '#0DB39E',
+    color: Theme.dark.brand,
     fontSize: 14,
     fontWeight: 'bold',
   },

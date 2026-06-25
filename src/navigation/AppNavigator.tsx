@@ -11,6 +11,7 @@ import NFCReaderScreen from '../screens/NFC/NFCReaderScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import BalanceScreen from '../screens/Balance/BalanceScreen';
 import TravelHistoryScreen from '../screens/TravelHistory/TravelHistoryScreen';
+import CardsScreen from '../screens/Cards/CardsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -23,6 +24,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Balance: undefined;
   TravelHistory: undefined;
+  Cards: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -49,6 +51,7 @@ const AppNavigator: React.FC = () => {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Balance" component={BalanceScreen} />
         <Stack.Screen name="TravelHistory" component={TravelHistoryScreen} />
+        <Stack.Screen name="Cards" component={CardsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

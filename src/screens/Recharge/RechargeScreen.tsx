@@ -1,305 +1,75 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  TextInput,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import rechargeService, { FormaPagamento } from '../../services/rechargeService';
-
-const VALORES_RAPIDOS = [10, 20, 50, 100];
-
-const FORMAS_PAGAMENTO: { label: string; value: FormaPagamento; icon: string }[] = [
-  { label: 'Pix', value: 'PIX', icon: '💎' },
-  { label: 'Cartão de Crédito', value: 'CARTAO_CREDITO', icon: '💳' },
-  { label: 'Cartão de Débito', value: 'CARTAO_DEBITO', icon: '🏦' },
-];
+import cardService from '../../services/cardService';
+import ScreenWrapper from '../../components/ScreenWrapper';
+import RechargeModal from '../../components/RechargeModal';
+import { CardItem } from '../../components/CardsView';
 
 const RechargeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
+  const [loading, setLoading] = useState(true);
+  const [cards, setCards] = useState<CardItem[]>([]);
+  const [activeCardId, setActiveCardId] = useState('');
 
-  const [valorSelecionado, setValorSelecionado] = useState<number | null>(null);
-  const [valorCustom, setValorCustom] = useState('');
-  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento | null>(null);
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        const [saldoData, emailSalvo] = await Promise.all([
+          cardService.getMeuSaldo(),
+          AsyncStorage.getItem('@mobiliza:email'),
+        ]);
 
-  const valorFinal = (): number | null => {
-    if (valorCustom) {
-      const parsed = parseFloat(valorCustom.replace(',', '.'));
-      return isNaN(parsed) ? null : parsed;
-    }
-    return valorSelecionado;
+        const mainCard: CardItem = {
+          id: '1',
+          name: (emailSalvo?.split('@')[0] || 'Jayme').toUpperCase(),
+          number: saldoData.numeroCartao,
+          balance: saldoData.saldo,
+          color: 'from-emerald-500 to-teal-700',
+          type: 'virtual',
+          expiryDate: '12/30'
+        };
+
+        setCards([mainCard]);
+        setActiveCardId('1');
+      } finally {
+        setLoading(false);
+      }
+    };
+    carregarDados();
+  }, []);
+
+  const handleSuccess = (amount: number, cardId: string) => {
+    console.log(`Recarga de R$ ${amount} no cartão ${cardId} realizada!`);
+    // Aqui você pode adicionar a chamada ao backend se quiser persistir
   };
 
-  const handleConfirmar = async () => {
-    const valor = valorFinal();
-
-    if (!valor || valor <= 0) {
-      Alert.alert('Atenção', 'Escolha ou digite um valor válido para a recarga.');
-      return;
-    }
-
-    if (!formaPagamento) {
-      Alert.alert('Atenção', 'Escolha uma forma de pagamento.');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const resultado = await rechargeService.recharge({
-        valor,
-        formaPagamento,
-      });
-
-      Alert.alert(
-        'Recarga confirmada!',
-        `Seu novo saldo é ${resultado.saldo.toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL',
-        })}`,
-        [{ text: 'OK', onPress: () => navigation.navigate('Home') }],
-      );
-    } catch (error: any) {
-      const mensagem = error.response?.data?.mensagem || 'Não foi possível concluir a recarga.';
-      Alert.alert('Erro', mensagem);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color="#0DB39E" />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Recarregar</Text>
-        <Text style={styles.subtitle}>Seu saldo cai na hora em pagamentos via Pix ou Cartão.</Text>
+    <ScreenWrapper>
+      <View style={{ flex: 1 }}>
+        <RechargeModal
+          isOpen={true} // Aberto por padrão pois esta é a tela de recarga
+          onClose={() => navigation.goBack()}
+          cards={cards}
+          activeCardId={activeCardId}
+          onRechargeSuccess={handleSuccess}
+        />
       </View>
-
-      <View style={styles.content}>
-        <View style={styles.inputCard}>
-          <Text style={styles.sectionLabel}>Valor da Recarga</Text>
-          <View style={styles.inputRow}>
-            <Text style={styles.currency}>R$</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="0,00"
-              placeholderTextColor="#5e8278"
-              keyboardType="numeric"
-              value={valorCustom || (valorSelecionado ? valorSelecionado.toString() : '')}
-              onChangeText={(text) => {
-                setValorCustom(text);
-                setValorSelecionado(null);
-              }}
-            />
-          </View>
-        </View>
-
-        <View style={styles.valoresGrid}>
-          {VALORES_RAPIDOS.map((valor) => (
-            <TouchableOpacity
-              key={valor}
-              style={[
-                styles.valorChip,
-                valorSelecionado === valor && styles.valorChipSelected,
-              ]}
-              onPress={() => {
-                setValorSelecionado(valor);
-                setValorCustom('');
-              }}
-            >
-              <Text
-                style={[
-                  styles.valorChipText,
-                  valorSelecionado === valor && styles.valorChipTextSelected,
-                ]}
-              >
-                + R$ {valor}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.sectionTitle}>Forma de pagamento</Text>
-        <View style={styles.pagamentoList}>
-          {FORMAS_PAGAMENTO.map((forma) => (
-            <TouchableOpacity
-              key={forma.value}
-              style={[
-                styles.pagamentoItem,
-                formaPagamento === forma.value && styles.pagamentoItemSelected,
-              ]}
-              onPress={() => setFormaPagamento(forma.value)}
-            >
-              <Text style={styles.methodIcon}>{forma.icon}</Text>
-              <Text
-                style={[
-                  styles.pagamentoText,
-                  formaPagamento === forma.value && styles.pagamentoTextSelected,
-                ]}
-              >
-                {forma.label}
-              </Text>
-              {formaPagamento === forma.value && <Text style={styles.checkIcon}>✓</Text>}
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={styles.confirmButton}
-          onPress={handleConfirmar}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#0D1B1E" />
-          ) : (
-            <Text style={styles.confirmButtonText}>CONFIRMAR RECARGA</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0D1B1E',
-  },
-  header: {
-    padding: 24,
-    paddingTop: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#F2F4F7',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#5DCAA5',
-    marginTop: 8,
-  },
-  content: {
-    padding: 24,
-    paddingTop: 0,
-  },
-  inputCard: {
-    backgroundColor: '#0c2b27',
-    padding: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#1d4a42',
-    marginBottom: 24,
-  },
-  sectionLabel: {
-    color: '#5DCAA5',
-    fontSize: 12,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  currency: {
-    color: '#F2F4F7',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginRight: 8,
-  },
-  input: {
-    color: '#F2F4F7',
-    fontSize: 40,
-    fontWeight: 'bold',
-    flex: 1,
-  },
-  valoresGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  valorChip: {
-    backgroundColor: 'rgba(93, 202, 165, 0.05)',
-    borderWidth: 1,
-    borderColor: '#1d4a42',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    width: '23%',
-    alignItems: 'center',
-  },
-  valorChipSelected: {
-    backgroundColor: '#0DB39E',
-    borderColor: '#0DB39E',
-  },
-  valorChipText: {
-    color: '#5DCAA5',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  valorChipTextSelected: {
-    color: '#0D1B1E',
-  },
-  sectionTitle: {
-    color: '#F2F4F7',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  pagamentoList: {
-    gap: 12,
-  },
-  pagamentoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0c2b27',
-    borderWidth: 1,
-    borderColor: '#1d4a42',
-    borderRadius: 16,
-    padding: 16,
-  },
-  pagamentoItemSelected: {
-    borderColor: '#0DB39E',
-    backgroundColor: '#103d36',
-  },
-  methodIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  pagamentoText: {
-    color: '#F2F4F7',
-    fontSize: 15,
-    flex: 1,
-  },
-  pagamentoTextSelected: {
-    color: '#0DB39E',
-    fontWeight: 'bold',
-  },
-  checkIcon: {
-    color: '#0DB39E',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  confirmButton: {
-    backgroundColor: '#0DB39E',
-    borderRadius: 12,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 40,
-    elevation: 4,
-  },
-  confirmButtonText: {
-    color: '#0D1B1E',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  loading: { flex: 1, backgroundColor: '#0D1317', justifyContent: 'center', alignItems: 'center' }
 });
 
 export default RechargeScreen;
