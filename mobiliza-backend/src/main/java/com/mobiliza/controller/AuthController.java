@@ -5,7 +5,6 @@ import com.mobiliza.dto.LoginRequest;
 import com.mobiliza.dto.RegisterRequest;
 import com.mobiliza.dto.ResetPasswordRequest;
 import com.mobiliza.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,10 +12,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(

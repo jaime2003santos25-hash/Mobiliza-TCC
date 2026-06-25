@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -33,7 +34,7 @@ const HomeScreen: React.FC = () => {
 
       setSaldo(saldoData.saldo);
       setNumeroCartao(saldoData.numeroCartao);
-      setViagens(historicoData);
+      setViagens(historicoData.slice(0, 3)); // Mostrar apenas as 3 últimas
       if (emailSalvo) setNome(emailSalvo.split('@')[0]);
     } catch (error) {
       console.log('Erro ao carregar dados da Home:', error);
@@ -43,8 +44,6 @@ const HomeScreen: React.FC = () => {
     }
   };
 
-  // Recarrega os dados toda vez que a tela ganha foco
-  // (ex: voltar de uma recarga de saldo)
   useFocusEffect(
     useCallback(() => {
       carregarDados();
@@ -59,15 +58,6 @@ const HomeScreen: React.FC = () => {
   const formatarMoeda = (valor: number) =>
     valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const formatarData = (isoDate: string) => {
-    const data = new Date(isoDate);
-    return data.toLocaleDateString('pt-BR') + ' - ' +
-      data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const mascaraCartao = (numero: string) =>
-    numero ? `•••• ${numero.slice(-4)}` : '';
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -80,54 +70,94 @@ const HomeScreen: React.FC = () => {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor="#0DB39E"
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#0DB39E" />
       }
     >
+      {/* Header com Saudação */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Olá, {nome || 'usuário'}!</Text>
+        <View>
+          <Text style={styles.greeting}>Olá, {nome || 'Jayme'}! 👋</Text>
+        </View>
+        <TouchableOpacity style={styles.notificationBtn}>
+          <Text style={styles.bellIcon}>🔔</Text>
+          <View style={styles.notificationDot} />
+        </TouchableOpacity>
       </View>
 
+      {/* Card de Saldo */}
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Saldo atual</Text>
+        <View style={styles.balanceHeader}>
+          <Text style={styles.balanceLabel}>Saldo atual</Text>
+          <Text style={styles.nfcIconSmall}>📶</Text>
+        </View>
         <Text style={styles.balanceValue}>
-          {saldo !== null ? formatarMoeda(saldo) : '--'}
+          {saldo !== null ? formatarMoeda(saldo) : 'R$ 0,00'}
         </Text>
-        <Text style={styles.cardNumber}>
-          Bilhete Único {mascaraCartao(numeroCartao)}
-        </Text>
+        <TouchableOpacity
+          style={styles.rechargeBtnInside}
+          onPress={() => navigation.navigate('Recharge')}
+        >
+          <Text style={styles.rechargeBtnText}>Recarregar</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.rechargeButton}
-        onPress={() => navigation.navigate('Recharge')}
-      >
-        <Text style={styles.rechargeButtonText}>Recarregar</Text>
+      {/* Grid de Ações Rápidas */}
+      <View style={styles.actionGrid}>
+        <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate('TravelHistory')}>
+          <View style={styles.actionIconBg}><Text style={styles.actionIcon}>🕒</Text></View>
+          <Text style={styles.actionText}>Histórico de viagens</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionItem}>
+          <View style={styles.actionIconBg}><Text style={styles.actionIcon}>💳</Text></View>
+          <Text style={styles.actionText}>Meus cartões</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate('Recharge')}>
+          <View style={styles.actionIconBg}><Text style={styles.actionIcon}>📁</Text></View>
+          <Text style={styles.actionText}>Recarga</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionItem} onPress={() => navigation.navigate('Profile')}>
+          <View style={styles.actionIconBg}><Text style={styles.actionIcon}>⚙️</Text></View>
+          <Text style={styles.actionText}>Configurações</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Card Informativo NFC */}
+      <TouchableOpacity style={styles.nfcPromoCard} onPress={() => navigation.navigate('NFC')}>
+        <View style={styles.nfcPromoIcon}>
+          <Text style={styles.phoneIcon}>📱</Text>
+        </View>
+        <View style={styles.nfcPromoContent}>
+          <Text style={styles.nfcPromoTitle}>Aproxime e passe</Text>
+          <Text style={styles.nfcPromoSubtitle}>Use o NFC para validar sua passagem de forma rápida e segura.</Text>
+        </View>
+        <Text style={styles.chevronRight}>›</Text>
       </TouchableOpacity>
 
+      {/* Seção de Últimas Viagens */}
       <View style={styles.historySection}>
-        <Text style={styles.sectionTitle}>Histórico de viagens</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Últimas viagens</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('TravelHistory')}>
+            <Text style={styles.seeAllText}>Ver todas</Text>
+          </TouchableOpacity>
+        </View>
 
         {viagens.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
-              Você ainda não fez nenhuma viagem.
-            </Text>
-          </View>
+          <Text style={styles.emptyText}>Nenhuma viagem recente.</Text>
         ) : (
           viagens.map((viagem) => (
             <View key={viagem.id} style={styles.travelItem}>
-              <View>
-                <Text style={styles.travelDate}>
-                  {formatarData(viagem.dataHora)}
-                </Text>
+              <View style={styles.travelIconContainer}>
+                <Text style={styles.busIcon}>🚌</Text>
               </View>
-              <Text style={styles.travelValue}>
-                {formatarMoeda(viagem.valor)}
-              </Text>
+              <View style={styles.travelDetails}>
+                <Text style={styles.travelLocation}>Ônibus - Mobiliza</Text>
+                <Text style={styles.travelDate}>15/05/2024 - 08:15</Text>
+              </View>
+              <Text style={styles.travelValue}>R$ 4,40</Text>
             </View>
           ))
         )}
@@ -139,99 +169,168 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D1B1E',
+    backgroundColor: '#0D1317', // Cor de fundo do print
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0D1B1E',
+    backgroundColor: '#0D1317',
     justifyContent: 'center',
     alignItems: 'center',
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 8,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
   greeting: {
     fontSize: 22,
     fontWeight: '700',
     color: '#F2F4F7',
   },
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1A2227',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bellIcon: { fontSize: 20 },
+  notificationDot: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#0DB39E',
+    borderWidth: 1.5,
+    borderColor: '#1A2227',
+  },
   balanceCard: {
-    backgroundColor: '#0c2b27',
-    borderWidth: 1,
-    borderColor: '#1d4a42',
-    borderRadius: 16,
+    backgroundColor: '#1A2227',
+    borderRadius: 24,
     marginHorizontal: 24,
-    marginTop: 16,
-    padding: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#2D373D',
   },
-  balanceLabel: {
-    color: '#5DCAA5',
-    fontSize: 13,
+  balanceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
+  balanceLabel: { color: '#7fa89e', fontSize: 14 },
+  nfcIconSmall: { fontSize: 18, color: '#0DB39E' },
   balanceValue: {
     color: '#F2F4F7',
-    fontSize: 32,
-    fontWeight: '700',
-    marginTop: 4,
+    fontSize: 34,
+    fontWeight: 'bold',
+    marginBottom: 24,
   },
-  cardNumber: {
-    color: '#7fa89e',
-    fontSize: 13,
-    marginTop: 12,
-  },
-  rechargeButton: {
+  rechargeBtnInside: {
     backgroundColor: '#0DB39E',
-    borderRadius: 12,
-    marginHorizontal: 24,
-    marginTop: 16,
+    borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  rechargeButtonText: {
-    color: '#0D1B1E',
-    fontWeight: '700',
-    fontSize: 15,
+  rechargeBtnText: { color: '#0D1317', fontWeight: 'bold', fontSize: 16 },
+  actionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    marginTop: 24,
   },
+  actionItem: {
+    width: '45%',
+    backgroundColor: '#1A2227',
+    margin: '2.5%',
+    borderRadius: 20,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#2D373D',
+  },
+  actionIconBg: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: 'rgba(13, 179, 158, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  actionIcon: { fontSize: 20 },
+  actionText: {
+    color: '#F2F4F7',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  nfcPromoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A2227',
+    marginHorizontal: 24,
+    marginTop: 24,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2D373D',
+  },
+  nfcPromoIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#0D1317',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  phoneIcon: { fontSize: 24 },
+  nfcPromoContent: { flex: 1 },
+  nfcPromoTitle: { color: '#0DB39E', fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+  nfcPromoSubtitle: { color: '#7fa89e', fontSize: 12, lineHeight: 18 },
+  chevronRight: { color: '#0DB39E', fontSize: 24, marginLeft: 8 },
   historySection: {
     marginTop: 32,
     paddingHorizontal: 24,
     paddingBottom: 40,
   },
-  sectionTitle: {
-    color: '#F2F4F7',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  emptyState: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    color: '#5e8278',
-    fontSize: 14,
-  },
-  travelItem: {
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#0c1f1c',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 16,
   },
-  travelDate: {
-    color: '#F2F4F7',
-    fontSize: 13,
+  sectionTitle: { color: '#F2F4F7', fontSize: 18, fontWeight: 'bold' },
+  seeAllText: { color: '#0DB39E', fontSize: 14, fontWeight: '600' },
+  travelItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A2227',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
   },
-  travelValue: {
-    color: '#0DB39E',
-    fontSize: 14,
-    fontWeight: '700',
+  travelIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(13, 179, 158, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
+  busIcon: { fontSize: 20 },
+  travelDetails: { flex: 1 },
+  travelLocation: { color: '#F2F4F7', fontSize: 15, fontWeight: '600', marginBottom: 4 },
+  travelDate: { color: '#7fa89e', fontSize: 12 },
+  travelValue: { color: '#F2F4F7', fontSize: 15, fontWeight: 'bold' },
+  emptyText: { color: '#7fa89e', textAlign: 'center', marginTop: 20 },
 });
 
 export default HomeScreen;

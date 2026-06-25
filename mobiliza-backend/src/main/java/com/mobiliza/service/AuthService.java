@@ -9,7 +9,6 @@ import com.mobiliza.repository.CartaoRepository;
 import com.mobiliza.repository.SaldoRepository;
 import com.mobiliza.repository.UsuarioRepository;
 import com.mobiliza.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,7 +22,6 @@ import java.util.Map;
 import java.time.LocalDateTime;
 import java.util.Random;
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final EmailService emailService;
@@ -33,6 +31,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
+
+    public AuthService(EmailService emailService, UsuarioRepository usuarioRepository, 
+                       CartaoRepository cartaoRepository, SaldoRepository saldoRepository, 
+                       PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, 
+                       AuthenticationManager authenticationManager) {
+        this.emailService = emailService;
+        this.usuarioRepository = usuarioRepository;
+        this.cartaoRepository = cartaoRepository;
+        this.saldoRepository = saldoRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.authenticationManager = authenticationManager;
+    }
 
     public Map<String, String> login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(

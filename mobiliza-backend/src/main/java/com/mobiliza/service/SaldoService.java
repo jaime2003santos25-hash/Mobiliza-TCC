@@ -6,14 +6,12 @@ import com.mobiliza.model.Cartao;
 import com.mobiliza.model.Saldo;
 import com.mobiliza.repository.CartaoRepository;
 import com.mobiliza.repository.SaldoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class SaldoService {
 
     private static final List<String> FORMAS_PAGAMENTO_VALIDAS =
@@ -21,6 +19,11 @@ public class SaldoService {
 
     private final CartaoRepository cartaoRepository;
     private final SaldoRepository saldoRepository;
+
+    public SaldoService(CartaoRepository cartaoRepository, SaldoRepository saldoRepository) {
+        this.cartaoRepository = cartaoRepository;
+        this.saldoRepository = saldoRepository;
+    }
 
     public SaldoResponse buscarSaldoPorUsuario(Long usuarioId) {
         Cartao cartao = buscarCartaoDoUsuario(usuarioId);

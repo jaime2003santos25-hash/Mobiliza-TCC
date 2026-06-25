@@ -1,15 +1,9 @@
 package com.mobiliza.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "cartoes")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Cartao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,4 +14,13 @@ public class Cartao {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+
+    public Cartao() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNumero() { return numero; }
+    public void setNumero(String numero) { this.numero = numero; }
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 }

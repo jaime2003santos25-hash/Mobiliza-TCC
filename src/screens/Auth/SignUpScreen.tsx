@@ -5,18 +5,17 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  ActivityIndicator,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import authService from '../../services/authService';
 
 const SignUpScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -25,36 +24,24 @@ const SignUpScreen: React.FC = () => {
 
   const handleSignUp = async () => {
     if (!nome || !email || !senha || !confirmarSenha) {
-      Alert.alert('Atenção', 'Preencha todos os campos.');
-      return;
-    }
-
-    if (senha.length < 6) {
-      Alert.alert('Atenção', 'A senha deve ter pelo menos 6 caracteres.');
+      Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
       return;
     }
 
     if (senha !== confirmarSenha) {
-      Alert.alert('Atenção', 'As senhas não coincidem.');
+      Alert.alert('Erro', 'As senhas não coincidem.');
       return;
     }
 
-    setLoading(true);
-
     try {
+      setLoading(true);
       await authService.signUp({ nome, email, senha });
-
-      Alert.alert(
-        'Conta criada!',
-        'Seu cadastro foi realizado com sucesso. Faça login para continuar.',
-        [{ text: 'OK', onPress: () => navigation.navigate('Login') }],
-      );
+      Alert.alert('Sucesso', 'Conta criada com sucesso! Faça login para continuar.', [
+        { text: 'OK', onPress: () => navigation.navigate('Login') }
+      ]);
     } catch (error: any) {
-      const mensagem =
-        error.response?.data?.mensagem ||
-        error.response?.data?.message ||
-        'Não foi possível criar sua conta. Tente novamente.';
-      Alert.alert('Erro ao cadastrar', mensagem);
+      const msg = error?.response?.data?.message || 'Erro ao criar conta.';
+      Alert.alert('Erro no Cadastro', msg);
     } finally {
       setLoading(false);
     }
@@ -62,81 +49,82 @@ const SignUpScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>Criar conta</Text>
-          <Text style={styles.logoSubtitle}>
-            Comece a usar o Mobiliza agora mesmo
-          </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Criar Conta</Text>
+          <Text style={styles.subtitle}>Junte-se ao Mobiliza e facilite suas viagens.</Text>
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Nome completo</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Seu nome"
-            placeholderTextColor="#5e8278"
-            value={nome}
-            onChangeText={setNome}
-            autoCapitalize="words"
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nome Completo</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Digite seu nome"
+              placeholderTextColor="#5e8278"
+              value={nome}
+              onChangeText={setNome}
+              autoCapitalize="words"
+            />
+          </View>
 
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="seuemail@exemplo.com"
-            placeholderTextColor="#5e8278"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>E-mail</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="exemplo@email.com"
+              placeholderTextColor="#5e8278"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
 
-          <Text style={styles.label}>Senha</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Mínimo 6 caracteres"
-            placeholderTextColor="#5e8278"
-            value={senha}
-            onChangeText={setSenha}
-            secureTextEntry
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Senha</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Mínimo 6 caracteres"
+              placeholderTextColor="#5e8278"
+              secureTextEntry
+              value={senha}
+              onChangeText={setSenha}
+            />
+          </View>
 
-          <Text style={styles.label}>Confirmar senha</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Repita a senha"
-            placeholderTextColor="#5e8278"
-            value={confirmarSenha}
-            onChangeText={setConfirmarSenha}
-            secureTextEntry
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Confirmar Senha</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Repita sua senha"
+              placeholderTextColor="#5e8278"
+              secureTextEntry
+              value={confirmarSenha}
+              onChangeText={setConfirmarSenha}
+            />
+          </View>
 
           <TouchableOpacity
-            style={styles.button}
+            style={styles.signUpButton}
             onPress={handleSignUp}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#0D1B1E" />
             ) : (
-              <Text style={styles.buttonText}>Criar conta</Text>
+              <Text style={styles.signUpButtonText}>CRIAR CONTA</Text>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('Login')}
-            style={styles.linkContainer}
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <Text style={styles.linkText}>
-              Já tem conta? <Text style={styles.linkTextBold}>Entrar</Text>
-            </Text>
+            <Text style={styles.backButtonText}>Já tenho uma conta. <Text style={{color: '#0DB39E', fontWeight: 'bold'}}>Entrar</Text></Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -151,67 +139,63 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    padding: 24,
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 32,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 36,
+  header: {
+    marginBottom: 40,
   },
-  logoText: {
+  title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: '#F2F4F7',
+    marginBottom: 8,
   },
-  logoSubtitle: {
-    fontSize: 14,
+  subtitle: {
+    fontSize: 16,
     color: '#5DCAA5',
-    marginTop: 4,
-    textAlign: 'center',
   },
   form: {
     width: '100%',
   },
+  inputGroup: {
+    marginBottom: 20,
+  },
   label: {
-    color: '#F2F4F7',
+    color: '#5DCAA5',
     fontSize: 14,
+    fontWeight: '600',
     marginBottom: 8,
-    marginTop: 16,
   },
   input: {
     backgroundColor: '#0c2b27',
     borderWidth: 1,
     borderColor: '#1d4a42',
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    padding: 16,
     color: '#F2F4F7',
     fontSize: 16,
   },
-  button: {
+  signUpButton: {
     backgroundColor: '#0DB39E',
     borderRadius: 12,
-    paddingVertical: 16,
+    padding: 18,
     alignItems: 'center',
-    marginTop: 28,
+    marginTop: 20,
+    elevation: 4,
   },
-  buttonText: {
+  signUpButtonText: {
     color: '#0D1B1E',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
-  linkContainer: {
+  backButton: {
     marginTop: 24,
+    alignItems: 'center',
   },
-  linkText: {
+  backButtonText: {
     color: '#7fa89e',
-    textAlign: 'center',
     fontSize: 14,
-  },
-  linkTextBold: {
-    color: '#0DB39E',
-    fontWeight: '700',
   },
 });
 
