@@ -7,7 +7,7 @@ export interface SaldoResponse {
 
 const cardService = {
   getMeuSaldo: async (): Promise<SaldoResponse> => {
-    const response = await api.get<SaldoResponse>('/saldos/meu-saldo');
+    const response = await api.get<SaldoResponse>('saldos/meu-saldo');
     return response.data;
   },
 };

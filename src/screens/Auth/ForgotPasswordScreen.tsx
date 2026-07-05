@@ -34,7 +34,8 @@ const ForgotPasswordScreen: React.FC = () => {
       setCodigoEnviado(true);
       Alert.alert('Sucesso', response.mensagem || 'Código enviado para seu e-mail.');
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || 'Não foi possível enviar o código. Verifique sua conexão.';
+      console.error('Erro ao enviar código:', error);
+      const errorMsg = error?.response?.data?.message || error?.message || 'Não foi possível enviar o código. Verifique sua conexão.';
       Alert.alert('Erro', errorMsg);
     } finally {
       setLoading(false);
@@ -59,7 +60,8 @@ const ForgotPasswordScreen: React.FC = () => {
         { text: 'OK', onPress: () => navigation.replace('Login') }
       ]);
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.message || 'Erro ao alterar senha.';
+      console.error('Erro ao redefinir senha:', error);
+      const errorMsg = error?.response?.data?.message || error?.message || 'Erro ao alterar senha.';
       Alert.alert('Erro', errorMsg);
     } finally {
       setLoading(false);

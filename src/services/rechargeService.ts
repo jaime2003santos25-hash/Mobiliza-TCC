@@ -14,7 +14,7 @@ export interface RecargaResponse {
 
 const rechargeService = {
   recharge: async (data: RecargaRequest): Promise<RecargaResponse> => {
-    const response = await api.post<RecargaResponse>('/saldos/recarregar', data);
+    const response = await api.post<RecargaResponse>('saldos/recarregar', data);
     return response.data;
   },
 };

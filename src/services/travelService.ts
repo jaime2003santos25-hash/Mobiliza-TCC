@@ -8,7 +8,7 @@ export interface ViagemResponse {
 
 const travelService = {
   getHistorico: async (): Promise<ViagemResponse[]> => {
-    const response = await api.get<ViagemResponse[]>('/viagens/historico');
+    const response = await api.get<ViagemResponse[]>('viagens/historico');
     return response.data;
   },
 };
