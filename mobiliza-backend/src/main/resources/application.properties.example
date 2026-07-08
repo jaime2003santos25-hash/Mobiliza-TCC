@@ -1,0 +1,25 @@
+# Server configuration
+server.port=8080
+server.address=0.0.0.0
+
+# Database configuration (PostgreSQL)
+spring.datasource.url=jdbc:postgresql://seu-host:porta/seu-banco
+spring.datasource.username=seu-usuario
+spring.datasource.password=sua-senha
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+# JWT Secret
+jwt.secret=SuaChaveMestraAquiComPeloMenos32Caracteres
+jwt.expiration=86400000
+
+# EMAIL GMAIL
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=seu-email@gmail.com
+# Use uma Senha de App do Google
+spring.mail.password=sua-senha-de-app
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.required=true

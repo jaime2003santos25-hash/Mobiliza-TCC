@@ -93,18 +93,25 @@ public class AuthService {
 
 
     public Map<String, String> esqueciSenha(String email) {
-
+        System.out.println("Solicitação de recuperação de senha para: " + email);
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         String codigo = gerarCodigo();
+        System.out.println("Código gerado: " + codigo);
 
         usuario.setCodigoRecuperacao(codigo);
         usuario.setExpiracaoCodigo(LocalDateTime.now().plusMinutes(15));
 
         usuarioRepository.save(usuario);
 
-        emailService.enviarCodigo(email, codigo);
+        try {
+            emailService.enviarCodigo(email, codigo);
+            System.out.println("E-mail enviado com sucesso!");
+        } catch (Exception e) {
+            System.err.println("Erro ao enviar e-mail: " + e.getMessage());
+            throw new RuntimeException("Erro ao enviar e-mail de recuperação. Verifique a configuração de SMTP.");
+        }
 
         Map<String, String> response = new HashMap<>();
         response.put("mensagem", "Código enviado para o e-mail.");

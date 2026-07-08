@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,21 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  Home,
+  CreditCard,
+  History as HistoryIcon,
+  User,
+  Bell,
+  Plus,
+  ChevronRight,
+  Wifi,
+  Clock,
+  Wallet
+} from 'lucide-react-native';
 import ScreenWrapper from '../../components/ScreenWrapper';
 import CardsView from '../../components/CardsView';
 import HistoryView from '../../components/HistoryView';
@@ -26,32 +40,47 @@ const HomeScreen: React.FC = () => {
     name: 'Jayme',
     balance: 45.30,
     notificationOn: true,
-    biometricOn: false
+    biometricOn: true
   });
 
   const [cards, setCards] = useState<CardItem[]>([
-    { id: '1', name: 'Bilhete Único SP', number: '•••• 5320', balance: 45.30, color: 'emerald', active: true, type: 'virtual', expiryDate: '08/32' },
-    { id: '2', name: 'Cartão Estudante', number: '•••• 1045', balance: 15.00, color: 'blue', active: false, type: 'virtual', expiryDate: '12/29' }
+    { id: '1', name: 'Bilhete Único SP', number: '•••• •••• •••• 5320', balance: 45.30, color: 'emerald', active: true, type: 'virtual', expiryDate: '12/30' }
   ]);
 
   const [trips, setTrips] = useState<TripItem[]>([
-    { id: 't1', title: 'Metrô - Estação Sé', date: 'Hoje - 08:15', price: 4.40, type: 'metro' },
-    { id: 't2', title: 'Recarga Pix', date: 'Ontem - 17:40', price: 50.00, type: 'recharge' },
-    { id: 't3', title: 'Ônibus - Linha 2101', date: '23/06 - 11:20', price: 4.40, type: 'bus' }
+    { id: 't1', title: 'Metrô - Estação Sé', date: '25/06/2026', price: 4.40, type: 'metro' },
+    { id: 't2', title: 'Recarga Pix', date: '24/06/2026', price: 50.00, type: 'recharge' },
+    { id: 't3', title: 'Ônibus - Linha 2101', date: '23/06/2026', price: 4.40, type: 'bus' }
   ]);
 
-  const activeCard = cards[0];
+  useEffect(() => {
+    loadCachedData();
+  }, []);
 
-  const handleUpdateProfile = (u: Partial<UserProfile>) => {
-    setProfile(prev => ({ ...prev, ...u }));
+  const loadCachedData = async () => {
+    try {
+      const cachedProfile = await AsyncStorage.getItem('@mobiliza:profile');
+      if (cachedProfile) setProfile(JSON.parse(cachedProfile));
+    } catch (e) {
+      console.error('Erro ao carregar cache', e);
+    }
   };
+
+  const activeCard = cards.find(c => c.active) || cards[0];
 
   const renderContent = () => {
     switch (currentTab) {
       case 'cartao': return <CardsView cards={cards} activeCardId={activeCard.id} onSetActive={()=>{}} onAddCard={()=>{}} onDeleteCard={()=>{}} />;
       case 'historico': return <HistoryView trips={trips} />;
-      case 'perfil': return <ProfileView profile={profile} onUpdateProfile={handleUpdateProfile} tripCount={trips.length} onLogout={()=>{}} />;
-      case 'nfc': return <NfcValidator onBack={() => setCurrentTab('inicio')} balance={activeCard.balance} activeCardName={activeCard.name} isOnline={true} />;
+      case 'perfil': return <ProfileView profile={profile} onUpdateProfile={(u) => setProfile(p => ({...p, ...u}))} tripCount={trips.length} onLogout={()=>{}} />;
+      case 'nfc': return (
+        <NfcValidator
+          onBack={() => setCurrentTab('inicio')}
+          balance={activeCard.balance}
+          activeCardName={activeCard.name}
+          isOnline={true}
+        />
+      );
       default: return renderHome();
     }
   };
@@ -59,80 +88,105 @@ const HomeScreen: React.FC = () => {
   const renderHome = () => (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
-        <View style={styles.greetingRow}>
-          <Text style={styles.greeting}>Olá, {profile.name}!</Text>
-          <Text style={styles.wave}>👋</Text>
+        <View>
+          <Text style={styles.greetingSmall}>Olá,</Text>
+          <Text style={styles.greetingLarge}>{profile.name}</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn}>
-          <Text style={{fontSize: 20}}>🔔</Text>
+          <Bell size={22} color="#FFF" />
           <View style={styles.dot} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.balanceCard}>
-        <View>
-          <Text style={styles.balanceLabel}>Saldo atual</Text>
-          <Text style={styles.balanceValue}>R$ {activeCard.balance.toFixed(2)}</Text>
+        <View style={styles.balanceHeader}>
+          <Text style={styles.balanceLabel}>SALDO ATUAL</Text>
+          <View style={styles.activeBadge}>
+            <Text style={styles.activeBadgeText}>ATIVO</Text>
+          </View>
         </View>
-        <TouchableOpacity style={styles.rechargeBtn} onPress={() => setIsRecharging(true)}>
-          <Text style={styles.rechargeBtnText}>Recarregar</Text>
+
+        <View style={styles.balanceRow}>
+          <Text style={styles.balanceValue}>R$ {activeCard.balance.toFixed(2)}</Text>
+          <TouchableOpacity style={styles.plusBtn} onPress={() => setIsRecharging(true)}>
+            <Plus size={24} color="#0D1317" strokeWidth={4} />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.cardInfoRow} onPress={() => setCurrentTab('cartao')}>
+          <View style={styles.cardIconSmall}>
+             <CreditCard size={14} color="#7fa89e" />
+          </View>
+          <Text style={styles.cardOwnerText}>{profile.name.toUpperCase()}</Text>
+          <ChevronRight size={18} color="#7fa89e" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.grid}>
-        <ActionItem icon="🕒" label="Histórico de viagens" onPress={() => setCurrentTab('historico')} />
-        <ActionItem icon="💳" label="Meus cartões" onPress={() => setCurrentTab('cartao')} />
-        <ActionItem icon="📁" label="Recarga" onPress={() => setIsRecharging(true)} />
-        <ActionItem icon="⚙️" label="Configurações" onPress={() => setCurrentTab('perfil')} />
+      <View style={styles.quickActions}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => setIsRecharging(true)}>
+          <View style={styles.actionIcon}><Wallet size={20} color="#00b87c" /></View>
+          <Text style={styles.actionLabel}>Recarga Pix</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => setCurrentTab('cartao')}>
+          <View style={styles.actionIcon}><CreditCard size={20} color="#00b87c" /></View>
+          <Text style={styles.actionLabel}>Minha Carteira</Text>
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.nfcBanner} onPress={() => setCurrentTab('nfc')}>
-        <View style={styles.nfcIconBox}><Text style={{fontSize: 24}}>📱</Text></View>
-        <View style={{flex: 1}}>
-          <Text style={styles.nfcTitle}>Aproxime e passe</Text>
-          <Text style={styles.nfcSub}>Use o NFC para validar sua passagem de forma rápida e segura.</Text>
+      <TouchableOpacity style={styles.mainNfcBtn} onPress={() => setCurrentTab('nfc')}>
+        <View style={styles.nfcWavesCircle}>
+          <Wifi size={24} color="#0D1317" style={{ transform: [{ rotate: '90deg' }] }} />
         </View>
-        <Text style={styles.chevron}>›</Text>
+        <View style={{flex: 1}}>
+          <Text style={styles.nfcBtnTitle}>Validar Passagem</Text>
+          <Text style={styles.nfcBtnSub}>Toque para ativar o sensor NFC</Text>
+        </View>
+        <ChevronRight size={24} color="#0D1317" opacity={0.5} />
       </TouchableOpacity>
 
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Últimas viagens</Text>
+        <Text style={styles.sectionTitle}>Atividades recentes</Text>
         <TouchableOpacity onPress={() => setCurrentTab('historico')}>
-          <Text style={styles.seeAll}>Ver todas</Text>
+          <Text style={styles.seeAll}>Ver tudo</Text>
         </TouchableOpacity>
       </View>
 
       {trips.slice(0, 3).map(trip => (
         <View key={trip.id} style={styles.tripItem}>
-          <View style={styles.tripIcon}><Text>{trip.type === 'metro' ? '🚇' : '🚌'}</Text></View>
+          <View style={styles.tripIconBox}>
+             <Clock size={16} color="#7fa89e" />
+          </View>
           <View style={{flex: 1}}>
             <Text style={styles.tripTitle}>{trip.title}</Text>
             <Text style={styles.tripDate}>{trip.date}</Text>
           </View>
-          <Text style={styles.tripPrice}>R$ {trip.price.toFixed(2)}</Text>
+          <Text style={[styles.tripPrice, { color: trip.type === 'recharge' ? '#00b87c' : '#FFF' }]}>
+            {trip.type === 'recharge' ? '+' : '-'} R$ {trip.price.toFixed(2)}
+          </Text>
         </View>
       ))}
     </ScrollView>
   );
 
   return (
-    <ScreenWrapper backgroundColor={Theme.dark.bgPrimary}>
+    <ScreenWrapper backgroundColor="#090e11">
       <View style={{flex: 1}}>
         {renderContent()}
 
         {currentTab !== 'nfc' && (
           <View style={styles.tabBar}>
-            <TabItem icon="🏠" label="Início" active={currentTab === 'inicio'} onPress={() => setCurrentTab('inicio')} />
-            <TabItem icon="💳" label="Cartão" active={currentTab === 'cartao'} onPress={() => setCurrentTab('cartao')} />
+            <TabItem icon={Home} label="Início" active={currentTab === 'inicio'} onPress={() => setCurrentTab('inicio')} />
+            <TabItem icon={CreditCard} label="Cartões" active={currentTab === 'cartao'} onPress={() => setCurrentTab('cartao')} />
 
             <View style={styles.centerTab}>
                <TouchableOpacity style={styles.nfcCircle} onPress={() => setCurrentTab('nfc')}>
-                 <Text style={styles.nfcText}>NFC</Text>
+                 <Wifi size={28} color="#0D1317" style={{ transform: [{ rotate: '90deg' }] }} />
                </TouchableOpacity>
+               <Text style={styles.nfcTabLabel}>NFC</Text>
             </View>
 
-            <TabItem icon="🕒" label="Histórico" active={currentTab === 'historico'} onPress={() => setCurrentTab('historico')} />
-            <TabItem icon="👤" label="Perfil" active={currentTab === 'perfil'} onPress={() => setCurrentTab('perfil')} />
+            <TabItem icon={HistoryIcon} label="Histórico" active={currentTab === 'historico'} onPress={() => setCurrentTab('historico')} />
+            <TabItem icon={User} label="Perfil" active={currentTab === 'perfil'} onPress={() => setCurrentTab('perfil')} />
           </View>
         )}
 
@@ -141,70 +195,94 @@ const HomeScreen: React.FC = () => {
           onClose={() => setIsRecharging(false)}
           cards={cards}
           activeCardId={activeCard.id}
-          onRechargeSuccess={(amt) => {
-            const newCards = [...cards];
-            newCards[0].balance += amt;
-            setCards(newCards);
-            setIsRecharging(false);
-          }}
+          onRechargeSuccess={() => setIsRecharging(false)}
         />
       </View>
     </ScreenWrapper>
   );
 };
 
-const ActionItem = ({ icon, label, onPress }: any) => (
-  <TouchableOpacity style={styles.actionItem} onPress={onPress}>
-    <View style={styles.actionIconBg}><Text style={{fontSize: 20}}>{icon}</Text></View>
-    <Text style={styles.actionLabel}>{label}</Text>
-  </TouchableOpacity>
-);
-
-const TabItem = ({ icon, label, active, onPress }: any) => (
+const TabItem = ({ icon: Icon, label, active, onPress }: any) => (
   <TouchableOpacity style={styles.tabItem} onPress={onPress}>
-    <Text style={{fontSize: 20, opacity: active ? 1 : 0.4}}>{icon}</Text>
+    <Icon size={24} color={active ? '#00b87c' : '#FFF'} style={{ opacity: active ? 1 : 0.4 }} />
     <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
   </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  scrollContent: { padding: 24, paddingBottom: 100 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  greetingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  greeting: { fontSize: 22, fontWeight: 'bold', color: Theme.dark.textPrimary },
-  wave: { fontSize: 22 },
-  bellBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: Theme.dark.bgCard, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Theme.dark.borderPrimary },
-  dot: { position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: Theme.dark.brand, borderWidth: 2, borderColor: Theme.dark.bgCard },
-  balanceCard: { backgroundColor: Theme.dark.bgCard, borderRadius: 28, padding: 24, borderWidth: 1, borderColor: Theme.dark.borderPrimary, marginBottom: 24 },
-  balanceLabel: { color: Theme.dark.textTertiary, fontSize: 13, marginBottom: 4 },
-  balanceValue: { color: Theme.dark.textPrimary, fontSize: 32, fontWeight: 'bold', marginBottom: 20 },
-  rechargeBtn: { backgroundColor: Theme.dark.brand, padding: 16, borderRadius: 16, alignItems: 'center' },
-  rechargeBtnText: { color: Theme.dark.bgPrimary, fontWeight: 'bold', fontSize: 16 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-  actionItem: { width: (width - 60) / 2, backgroundColor: Theme.dark.bgCard, padding: 16, borderRadius: 20, alignItems: 'center', borderWidth: 1, borderColor: Theme.dark.borderPrimary },
-  actionIconBg: { width: 44, height: 44, backgroundColor: 'rgba(0,184,124,0.1)', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  actionLabel: { color: Theme.dark.textPrimary, fontSize: 12, fontWeight: 'bold', textAlign: 'center' },
-  nfcBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.dark.bgCard, padding: 20, borderRadius: 24, borderWidth: 1, borderColor: Theme.dark.borderPrimary, marginBottom: 24 },
-  nfcIconBox: { width: 50, height: 50, backgroundColor: 'rgba(0,184,124,0.1)', borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
-  nfcTitle: { color: Theme.dark.brand, fontWeight: 'bold', fontSize: 14, marginBottom: 4 },
-  nfcSub: { color: Theme.dark.textTertiary, fontSize: 11, lineHeight: 16 },
-  chevron: { color: Theme.dark.textQuaternary, fontSize: 24 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { color: Theme.dark.textPrimary, fontSize: 18, fontWeight: 'bold' },
-  seeAll: { color: Theme.dark.brand, fontSize: 14, fontWeight: 'bold' },
-  tripItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: Theme.dark.bgCard, padding: 16, borderRadius: 16, marginBottom: 10, borderWidth: 1, borderColor: Theme.dark.borderPrimary },
-  tripIcon: { width: 36, height: 36, backgroundColor: 'rgba(0,184,124,0.1)', borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  tripTitle: { color: Theme.dark.textSecondary, fontSize: 14, fontWeight: 'bold' },
-  tripDate: { color: Theme.dark.textQuaternary, fontSize: 10, marginTop: 2 },
-  tripPrice: { color: Theme.dark.textSecondary, fontWeight: 'bold' },
-  tabBar: { height: 85, backgroundColor: Theme.dark.bgPrimary, borderTopWidth: 1, borderColor: Theme.dark.borderPrimary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10 },
-  tabItem: { flex: 1, alignItems: 'center' },
-  tabLabel: { fontSize: 9, color: Theme.dark.textTertiary, marginTop: 4, fontWeight: 'bold' },
-  tabLabelActive: { color: Theme.dark.brand },
-  centerTab: { flex: 1, alignItems: 'center', marginTop: -40 },
-  nfcCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: Theme.dark.brand, borderWidth: 5, borderColor: Theme.dark.bgPrimary, justifyContent: 'center', alignItems: 'center', elevation: 8 },
-  nfcText: { color: Theme.dark.bgPrimary, fontSize: 12, fontWeight: 'bold' },
+  scrollContent: { padding: 24, paddingBottom: 140 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 },
+  greetingSmall: { color: '#7fa89e', fontSize: 14, fontWeight: '500' },
+  greetingLarge: { color: '#FFF', fontSize: 26, fontWeight: 'bold', marginTop: 2 },
+  bellBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#1A2227', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#2D373D' },
+  dot: { position: 'absolute', top: 14, right: 14, width: 8, height: 8, borderRadius: 4, backgroundColor: '#00b87c', borderWidth: 2, borderColor: '#1A2227' },
+
+  balanceCard: { backgroundColor: '#14251F', borderRadius: 32, padding: 24, marginBottom: 24, borderWidth: 1, borderColor: 'rgba(0,184,124,0.1)' },
+  balanceHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  balanceLabel: { color: '#7fa89e', fontSize: 11, fontWeight: 'bold', letterSpacing: 1.5 },
+  activeBadge: { backgroundColor: 'rgba(0,184,124,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  activeBadgeText: { color: '#00b87c', fontSize: 9, fontWeight: 'bold' },
+  balanceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  balanceValue: { color: '#FFF', fontSize: 40, fontWeight: 'bold' },
+  plusBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#00b87c', justifyContent: 'center', alignItems: 'center' },
+  cardInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 18, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
+  cardIconSmall: { width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+  cardOwnerText: { color: '#7fa89e', fontSize: 12, fontWeight: 'bold', flex: 1, letterSpacing: 1 },
+
+  quickActions: { flexDirection: 'row', gap: 16, marginBottom: 24 },
+  actionBtn: { flex: 1, backgroundColor: '#1A2227', padding: 22, borderRadius: 28, borderWidth: 1, borderColor: '#2D373D' },
+  actionIcon: { width: 36, height: 36, backgroundColor: 'rgba(0,184,124,0.05)', borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 14 },
+  actionLabel: { color: '#FFF', fontSize: 14, fontWeight: 'bold' },
+
+  mainNfcBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#00b87c', padding: 22, borderRadius: 32, marginBottom: 32 },
+  nfcWavesCircle: { width: 52, height: 52, backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: 26, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  nfcBtnTitle: { color: '#0D1317', fontSize: 17, fontWeight: 'bold' },
+  nfcBtnSub: { color: 'rgba(13,19,23,0.6)', fontSize: 12, marginTop: 2 },
+
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
+  sectionTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
+  seeAll: { color: '#00b87c', fontSize: 14, fontWeight: 'bold' },
+
+  tripItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A2227', padding: 18, borderRadius: 28, marginBottom: 12, borderWidth: 1, borderColor: '#2D373D' },
+  tripIconBox: { width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  tripTitle: { color: '#FFF', fontSize: 15, fontWeight: 'bold' },
+  tripDate: { color: '#7fa89e', fontSize: 11, marginTop: 4 },
+  tripPrice: { color: '#FFF', fontWeight: 'bold', fontSize: 15 },
+
+  tabBar: {
+    height: Platform.OS === 'ios' ? 100 : 85,
+    backgroundColor: '#0D1317',
+    borderTopWidth: 1,
+    borderColor: '#1A2227',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 0
+  },
+  tabItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  tabLabel: { fontSize: 10, color: '#7fa89e', marginTop: 6, fontWeight: 'bold' },
+  tabLabelActive: { color: '#00b87c' },
+  centerTab: { flex: 1, alignItems: 'center', marginTop: -45 },
+  nfcCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#00b87c',
+    borderWidth: 6,
+    borderColor: '#0D1317',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#00b87c',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 10
+  },
+  nfcTabLabel: { fontSize: 10, color: '#7fa89e', fontWeight: 'bold', marginTop: 4 }
 });
 
 export default HomeScreen;
