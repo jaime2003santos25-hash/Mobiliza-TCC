@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import authService from '../../services/authService';
+import ScreenWrapper from '../../components/ScreenWrapper';
 
 const ForgotPasswordScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -69,111 +70,112 @@ const ForgotPasswordScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Recuperar Senha</Text>
-          <Text style={styles.subtitle}>
-            {!codigoEnviado
-              ? 'Informe seu e-mail cadastrado para receber o código de validação.'
-              : 'Digite o código de 6 dígitos enviado e sua nova senha.'}
-          </Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>E-mail</Text>
-            <TextInput
-              style={[styles.input, codigoEnviado && styles.inputDisabled]}
-              placeholder="seuemail@exemplo.com"
-              placeholderTextColor="#5e8278"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-              editable={!codigoEnviado}
-            />
+    <ScreenWrapper>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Recuperar Senha</Text>
+            <Text style={styles.subtitle}>
+              {!codigoEnviado
+                ? 'Informe seu e-mail cadastrado para receber o código de validação.'
+                : 'Digite o código de 6 dígitos enviado e sua nova senha.'}
+            </Text>
           </View>
 
-          {!codigoEnviado ? (
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={enviarCodigo}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#0D1B1E" />
-              ) : (
-                <Text style={styles.actionButtonText}>ENVIAR CÓDIGO</Text>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Código de Verificação</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="000000"
-                  placeholderTextColor="#5e8278"
-                  keyboardType="number-pad"
-                  value={codigo}
-                  onChangeText={setCodigo}
-                  maxLength={6}
-                />
-              </View>
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>E-mail</Text>
+              <TextInput
+                style={[styles.input, codigoEnviado && styles.inputDisabled]}
+                placeholder="seuemail@exemplo.com"
+                placeholderTextColor="#5e8278"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+                editable={!codigoEnviado}
+              />
+            </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nova Senha</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Mínimo 6 caracteres"
-                  placeholderTextColor="#5e8278"
-                  secureTextEntry
-                  value={novaSenha}
-                  onChangeText={setNovaSenha}
-                />
-              </View>
-
+            {!codigoEnviado ? (
               <TouchableOpacity
                 style={styles.actionButton}
-                onPress={redefinirSenha}
+                onPress={enviarCodigo}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator color="#0D1B1E" />
                 ) : (
-                  <Text style={styles.actionButtonText}>ALTERAR SENHA</Text>
+                  <Text style={styles.actionButtonText}>ENVIAR CÓDIGO</Text>
                 )}
               </TouchableOpacity>
+            ) : (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Código de Verificação</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="000000"
+                    placeholderTextColor="#5e8278"
+                    keyboardType="number-pad"
+                    value={codigo}
+                    onChangeText={setCodigo}
+                    maxLength={6}
+                  />
+                </View>
 
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => setCodigoEnviado(false)}
-              >
-                <Text style={styles.backButtonText}>Não recebi o código. Tentar novamente</Text>
-              </TouchableOpacity>
-            </>
-          )}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Nova Senha</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Mínimo 6 caracteres"
+                    placeholderTextColor="#5e8278"
+                    secureTextEntry
+                    value={novaSenha}
+                    onChangeText={setNovaSenha}
+                  />
+                </View>
 
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.cancelButtonText}>Voltar para o Login</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={redefinirSenha}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#0D1B1E" />
+                  ) : (
+                    <Text style={styles.actionButtonText}>ALTERAR SENHA</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => setCodigoEnviado(false)}
+                >
+                  <Text style={styles.backButtonText}>Não recebi o código. Tentar novamente</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.cancelButtonText}>Voltar para o Login</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D1B1E',
   },
   scrollContent: {
     flexGrow: 1,
@@ -225,6 +227,12 @@ const styles = StyleSheet.create({
     padding: 18,
     alignItems: 'center',
     marginTop: 10,
+    // Sombras para iOS
+    shadowColor: '#0DB39E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    // Sombra para Android
     elevation: 4,
   },
   actionButtonText: {

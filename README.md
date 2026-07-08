@@ -1,97 +1,84 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Mobiliza - Tecnologia para Mobilidade Urbana 🚇🚌
 
-# Getting Started
+O **Mobiliza** é uma solução moderna e intuitiva desenvolvida como projeto de Trabalho de Conclusão de Curso (TCC), focada em otimizar a experiência do usuário no transporte público. Através da tecnologia NFC e uma interface de alta fidelidade, o aplicativo permite a gestão de saldos, recargas via Pix e validação de passagens de forma rápida e segura.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+---
 
-## Step 1: Start Metro
+## 🚀 Funcionalidades Principais
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- **Validação NFC:** Simulação de validação de passagens em catracas via tecnologia de aproximação.
+- **Gestão de Carteira:** Visualização detalhada de cartões virtuais e físicos com interface premium.
+- **Recarga Inteligente:** Fluxo de recarga simplificado com suporte a Pix e cartões.
+- **Histórico de Viagens:** Monitoramento completo de atividades recentes com filtros por categoria (Metrô, Ônibus, Recarga).
+- **Eco-Impacto:** Dashboard que calcula a economia de CO2 e a contribuição ecológica do usuário ao utilizar transporte público.
+- **Suporte Offline:** Carregamento instantâneo de dados via cache local (AsyncStorage), garantindo funcionalidade mesmo sem conexão ativa.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+---
 
-```sh
-# Using npm
-npm start
+## 🛠️ Stack Tecnológica
 
-# OR using Yarn
-yarn start
-```
+### Frontend (Mobile)
+- **Framework:** [React Native](https://reactnative.dev/) (CLI)
+- **Linguagem:** TypeScript
+- **Ícones:** Lucide Icons
+- **Navegação:** React Navigation
+- **Persistência Local:** AsyncStorage (Arquitetura Offline-First)
+- **Estilização:** StyleSheet com Design System personalizado (Emerald & Cyan).
 
-## Step 2: Build and run your app
+### Backend (API)
+- **Framework:** Spring Boot 3.2.0
+- **Linguagem:** Java 17
+- **Segurança:** Spring Security com autenticação JWT
+- **Banco de Dados:** PostgreSQL (Hospedado no Railway)
+- **Serviço de E-mail:** Java Mail Sender (Recuperação de senha via SMTP Gmail)
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+---
 
-### Android
+## 📂 Estrutura de Diretórios
 
-```sh
-# Using npm
-npm run android
+O projeto está organizado em uma arquitetura limpa, separando responsabilidades de Frontend e Backend:
 
-# OR using Yarn
-yarn android
-```
+### Raiz (Frontend)
+- `src/components/`: Componentes reutilizáveis (Ex: `NfcValidator`, `UserTicketCard`, `ScreenWrapper`).
+- `src/screens/`: Telas principais da aplicação (Home, Login, Perfil, Histórico).
+- `src/services/`: Integração com a API Axios e lógica de autenticação.
+- `src/assets/`: Recursos visuais, logos e imagens.
+- `android/`: Configurações nativas e scripts de build Gradle para Android.
+- `ios/`: Configurações nativas e arquivos de permissão para iOS.
 
-### iOS
+### `mobiliza-backend/` (Servidor)
+- `src/main/java/com/mobiliza/controller/`: Endpoints da API REST.
+- `src/main/java/com/mobiliza/service/`: Lógica de negócio e regras de validação.
+- `src/main/java/com/mobiliza/repository/`: Interfaces de comunicação com o banco de dados.
+- `src/main/java/com/mobiliza/model/`: Entidades persistentes (Usuário, Cartão, Viagem, Saldo).
+- `src/main/resources/`: Configurações de ambiente (`application.properties`).
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+---
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## 👥 Equipe do Projeto
+- **Jayme N. dos Santos**
+- **Sandra N. da Silva Santos**
+- **Silvana**
+- **Jordan**
+- **Mateus**
+- **Lucas**
 
-```sh
-bundle install
-```
+**Orientação Acadêmica:** Prof. Denilson Bernardo
 
-Then, and every time you update your native dependencies, run:
+---
 
-```sh
-bundle exec pod install
-```
+## 🛠️ Como Executar
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### 1. Iniciar o Backend
+1. Navegue até `mobiliza-backend`.
+2. Execute o comando: `mvn clean spring-boot:run`.
+3. Certifique-se de que o servidor iniciou na porta `8080`.
 
-```sh
-# Using npm
-npm run ios
+### 2. Iniciar o Mobile
+1. Na raiz do projeto, instale as dependências: `npm install`.
+2. Inicie o Metro Bundler: `npx react-native start --reset-cache`.
+3. Em outro terminal, execute o app no emulador: `npx react-native run-android`.
 
-# OR using Yarn
-yarn ios
-```
+---
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+© 2026 Mobiliza App. Desenvolvido para fins acadêmicos e inovação em mobilidade urbana.

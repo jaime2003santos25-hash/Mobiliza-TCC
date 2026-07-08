@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   StatusBar,
-  SafeAreaView,
   Dimensions,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../styles/theme';
 
 interface ScreenWrapperProps {
@@ -20,6 +20,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   backgroundColor = Theme.dark.bgPrimary
 }) => {
   const [time, setTime] = useState('09:41');
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const updateTime = () => {
@@ -39,7 +40,13 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* Top Header Placeholder (Apple style status bar overlay) */}
-      <View style={styles.statusBarOverlay}>
+      <View style={[
+        styles.statusBarOverlay,
+        {
+          height: Platform.OS === 'ios' ? Math.max(insets.top, 44) : insets.top + 20,
+          paddingTop: Platform.OS === 'ios' ? insets.top / 2 : insets.top
+        }
+      ]}>
         <Text style={styles.timeText}>{time}</Text>
         <View style={styles.statusIcons}>
           <Text style={styles.iconText}>📶</Text>
@@ -52,8 +59,8 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
         {children}
       </View>
 
-      {/* Home Indicator (Luxo) */}
-      <View style={styles.homeIndicatorContainer}>
+      {/* Home Indicator (Luxo) - Handled by insets.bottom on iOS */}
+      <View style={[styles.homeIndicatorContainer, { height: Math.max(insets.bottom, 24) }]}>
         <View style={styles.homeIndicator} />
       </View>
     </View>

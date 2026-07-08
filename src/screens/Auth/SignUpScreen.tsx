@@ -188,9 +188,12 @@ const styles = StyleSheet.create({
     padding: 18,
     alignItems: 'center',
     marginTop: 20,
+    // Sombras para iOS
     shadowColor: Theme.dark.brand,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
+    // Sombra para Android
     elevation: 4,
   },
   signUpButtonText: {

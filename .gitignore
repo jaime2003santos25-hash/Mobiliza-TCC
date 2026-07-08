@@ -70,6 +70,9 @@ yarn-error.log
 .env*
 !.env.example
 
+# Backend Secrets
+mobiliza-backend/src/main/resources/application.properties
+
 # Yarn
 .yarn/*
 !.yarn/patches

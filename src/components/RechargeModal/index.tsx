@@ -220,7 +220,19 @@ const styles = StyleSheet.create({
   summary: { padding: 20, backgroundColor: '#0D1317', borderRadius: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   summaryLabel: { color: '#5e8278', fontSize: 14 },
   summaryValue: { color: '#FFF', fontSize: 22, fontWeight: 'bold' },
-  mainBtn: { backgroundColor: '#00b87c', padding: 18, borderRadius: 16, alignItems: 'center', shadowColor: '#00b87c', shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+  mainBtn: {
+    backgroundColor: '#00b87c',
+    padding: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    // Sombras para iOS
+    shadowColor: '#00b87c',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    // Sombra para Android
+    elevation: 5
+  },
   mainBtnText: { color: '#0D1317', fontWeight: 'bold', fontSize: 16 },
   paymentTabs: { flexDirection: 'row', backgroundColor: '#0D1317', padding: 6, borderRadius: 16, gap: 6, marginBottom: 24 },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12 },
